@@ -1,8 +1,26 @@
 #Python 3.3.5 (v3.3.5:62cf4e77f785, Mar  9 2014, 10:37:12) [MSC v.1600 32 bit (Intel)] on win32
+
+# XML protocol: http://www.w3schools.com/xml/xml_validator.asp
+"""
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+ <head>
+  <title>Choice Co subscriptions in Aol Reader</title>
+ </head>
+ <body>
+  <outline title="绉戝銇湀" text="绉戝銇湀">
+   <outline title="HHMI's Holiday Lectures o..." text="HHMI's Holiday Lectures o..." type="rss" xmlUrl="http://www.hhmi.org/biointeractive/HHMI_Lectures.xml" htmlUrl="http://www.hhmi.org/biointeractive/"/
+   <...>
+  </outline>
+ </body>
+</opml
+"""
+
+quora = r'https://www.quora.com/What-are-the-best-programming-blogs'
+
 import os
 import urllib.request as ur
 import re
-
 
 
 feedly = 'feedly.opml'
@@ -48,7 +66,7 @@ b'</opml>\n'
 
 """a href="http://www.xaprb.com/blog/" rel="nofollow" class="external_link" target="_blank" onmouseover="return require(&quot;qtext&quot;).tooltip(this, &quot;xaprb.com&quot;)">Xaprb</a></span><br /></li><li><span class="qlink_container"><a href="http://blog.zawodny.com/" rel="nofollow" class="external_link" target="_blank" onmouseover="return require(&quot;qtext&quot;).tooltip(this, &quot;zawodny.com&quot;)">Jeremy Zawodny&#039;s blog</a></span>"""
 
-with ur.urlopen(r'https://www.quora.com/What-are-the-best-programming-blogs') as f:
+with ur.urlopen(quora) as f:
     html = f.read().decode('utf-8')
 
 len(html)  # 228282
@@ -97,6 +115,9 @@ len(xm)  # 105
 xm[0]  # ('http://codeascraft.com/', 'Code as Craft')
 xm[:6]  # [('http://codeascraft.com/', 'Code as Craft'), ('http://www.phpied.com/', "Stoyan's web dev blog: phpied.com"), ('http://www.subbu.org/', 'subbu.org - Subbu Allamaraju’s Blog'), ('http://mwop.net/blog.html', 'Blog Entries :: phly, boy, phly'), ('http://blog.catchpoint.com/', 'Web Performance Monitoring and Optimization'), ('http://www.sergeychernyshev.com/blog/', "Sergey Chernyshev's blog about projects and web in general.")]
 
+########################              TODO                  #####################
+# list all possible transformation from htmlurl to xmlurl
+# then try the right one, except to continue
 def com(text, url):        
 	"http://codeascraft.etsy.com/feed/"
 	"http://blog.catchpoint.com/feed/"
@@ -105,7 +126,7 @@ def com(text, url):
 	if r'blogspot.com' in url:
 		urlfeed = url + r"/feeds/posts/default"
 	else:
-		urlfeed = url + r'/feed/'
+		urlfeed = url.rstrip(r'/') + r'/feed/'
 
 		try:
 			ur.urlopen(urlfeed, timeout=2)
@@ -121,11 +142,13 @@ assert com(r"let us c new tech.. - Atom", r'http://tech2cp.blogspot.com/') ==  r
 
 with open(os.path.dirname(feedly) + r'\new.opml', 'wb') as f:  # TypeError: unsupported operand type(s) for +: 'function' and 'str'
     head = b"""<?xml version="1.0" encoding="UTF-8"?>\n\n<opml version="1.0">\n    <head>\n        <title>Ch subscriptions in feedly Cloud</title>\n    </head>\n    <body>\n        <outline text="Seriously" title="Seriously">\n"""
-    end = b"""    </body>\n</opml>\n"""
+    end = b"""  </outline> </body>\n</opml>\n"""
     f.write(head)
     for url, title in xm:
-        f.write(com(title, url).encode('utf-8'))  # AttributeError: 'str' object has no attribute 'encoding'       
+        f.write(com(title.replace('&quot;',' ').replace(' &amp; ', ' & ').replace('  ', ' '), url).encode('utf-8'))  # AttributeError: 'str' object has no attribute 'encoding'       
     f.write(end)
 with open(os.path.dirname(feedly) + r'\new.opml', 'rb') as f:
     htmlx = f.read()
     print(htmlx)
+
+
